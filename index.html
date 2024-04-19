@@ -48,6 +48,7 @@ font-size: 18px;
 <canvas id="gameCanvas"></canvas>
 <div id="mainMenu">
 <h1>Roman.io</h1>
+<input type="file" id="imageInput">
 <button id="playButton">Играть</button>
 </div>
 <div id="score">Score: <span id="scoreValue">0</span></div>
@@ -57,24 +58,23 @@ const ctx = canvas.getContext("2d");
 const mainMenu = document.getElementById("mainMenu");
 const playButton = document.getElementById("playButton");
 const scoreElement = document.getElementById("scoreValue");
+const imageInput = document.getElementById("imageInput");
 
 let inMainMenu = true;
 let score = 0;
+let playerImage;
+const ballImage = new Image();
+ballImage.src = "nepivo.png"; // Путь к изображению для маленьких шариков
 
-// Set canvas size to window size
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Initialize the big ball (player)
 const player = {
 x: canvas.width / 2,
 y: canvas.height / 2,
 radius: 30,
-color: "blue",
-borderColor: "darkblue" // Added border color
 };
 
-// Initialize the bot
 const bot = {
 x: Math.random() * canvas.width,
 y: Math.random() * canvas.height,
@@ -82,22 +82,11 @@ radius: 30,
 color: "red",
 };
 
-// Initialize an array of small balls
 const smallBalls = [];
 
-// Images
-const ballImage = new Image();
-ballImage.src = "nepivo.png"; // Replace "nepivo.png" with the path to your image
-
-// Function to create a small ball
 function createSmallBall() {
-    // Calculate random angle
     const angle = Math.random() * Math.PI * 2;
-    
-    // Calculate distance from player for the small ball to appear
-    const distance = player.radius + 20; // Change 20 to adjust distance
-    
-    // Calculate initial coordinates for the small ball
+    const distance = player.radius + 20;
     const x = player.x + Math.cos(angle) * distance;
     const y = player.y + Math.sin(angle) * distance;
 
@@ -109,160 +98,164 @@ function createSmallBall() {
     smallBalls.push(ball);
 }
 
-// Event listener for window resize
 window.addEventListener("resize", () => {
-// Resize canvas to fit window
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 });
 
-// Event listener for mouse movement
 canvas.addEventListener("mousemove", (e) => {
-if (!inMainMenu) {
-player.x = e.clientX;
-player.y = e.clientY;
-}
+    if (!inMainMenu) {
+        player.x = e.clientX;
+        player.y = e.clientY;
+    }
 });
 
-// Event listener for play button
 playButton.addEventListener("click", () => {
-mainMenu.style.display = "none";
-inMainMenu = false;
+    console.log("Игра начинается!");
+    mainMenu.style.display = "none";
+    inMainMenu = false;
+    
+    // Проверяем, загружено ли изображение синего шара
+    if (!playerImage) {
+        // Если изображение не загружено, используем стандартный синий круг
+        playerImage = new Image();
+        playerImage.onload = () => {
+            console.log("Изображение синего шара загружено!");
+        };
+        playerImage.src = "dadasereza.png"; // Путь к изображению для синего шара
+    }
 });
 
-// Event listener for key press (W)
 window.addEventListener("keydown", (e) => {
-if (e.key === "w" && player.radius > 10) {
-player.radius -= 5; // Decrease player size
-createSmallBall(); // Create a small ball
-}
+    if (e.key === "w" && player.radius > 10) {
+        player.radius -= 5;
+        createSmallBall();
+    }
 });
 
-// Function to move the bot towards the player
+imageInput.addEventListener("change", (e) => {
+    if (!inMainMenu) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            playerImage = new Image();
+            playerImage.src = reader.result;
+        };
+
+        reader.readAsDataURL(file);
+    }
+});
+
 function moveBot() {
-const dx = player.x - bot.x;
-const dy = player.y - bot.y;
-const angle = Math.atan2(dy, dx);
-const speed = 1;
-bot.x += Math.cos(angle) * speed;
-bot.y += Math.sin(angle) * speed;
+    const dx = player.x - bot.x;
+    const dy = player.y - bot.y;
+    const angle = Math.atan2(dy, dx);
+    const speed = 1;
+    bot.x += Math.cos(angle) * speed;
+    bot.y += Math.sin(angle) * speed;
 }
 
-// Function to reset the game
 function resetGame() {
-player.radius = 30;
-player.x = canvas.width / 2;
-player.y = canvas.height / 2;
-bot.radius = 30;
-bot.x = Math.random() * canvas.width;
-bot.y = Math.random() * canvas.height;
-smallBalls.length = 0;
-inMainMenu = true;
-mainMenu.style.display = "flex";
-score = 0;
-updateScore();
+    player.radius = 30;
+    player.x = canvas.width / 2;
+    player.y = canvas.height / 2;
+    bot.radius = 30;
+    bot.x = Math.random() * canvas.width;
+    bot.y = Math.random() * canvas.height;
+    smallBalls.length = 0;
+    inMainMenu = true;
+    mainMenu.style.display = "flex";
+    score = 0;
+    updateScore();
 }
 
-// Update score
 function updateScore() {
-scoreElement.textContent = score;
-if (score >= 500) {
-alert("Победа!");
-resetGame();
-}
+    scoreElement.textContent = score;
+    if (score >= 500) {
+        alert("Победа!");
+        resetGame();
+    }
 }
 
-// Animation loop
 function animate() {
-if (!inMainMenu) {
-ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!inMainMenu) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-// Draw grid background
-ctx.beginPath();
-ctx.strokeStyle = "lightgray"; // Grid color
-for (let x = 0; x < canvas.width; x += 50) {
-ctx.moveTo(x, 0);
-ctx.lineTo(x, canvas.height);
-}
-for (let y = 0; y < canvas.height; y += 50) {
-ctx.moveTo(0, y);
-ctx.lineTo(canvas.width, y);
-}
-ctx.stroke();
+        ctx.beginPath();
+        ctx.strokeStyle = "lightgray";
+        for (let x = 0; x < canvas.width; x += 50) {
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+        }
+        for (let y = 0; y < canvas.height; y += 50) {
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+        }
+        ctx.stroke();
 
-// Move the bot towards the player
-moveBot();
+        moveBot();
 
-// Draw the big ball (player) with border
-ctx.beginPath();
-ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-ctx.fillStyle = player.color;
-ctx.fill();
-ctx.strokeStyle = player.borderColor; // Border color
-ctx.lineWidth = 3; // Border width
-ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+        if (playerImage) {
+            ctx.drawImage(playerImage, player.x - player.radius, player.y - player.radius, player.radius * 2, player.radius * 2);
+        } else {
+            ctx.fillStyle = "blue";
+            ctx.fill();
+        }
 
-// Draw the bot
-ctx.beginPath();
-ctx.arc(bot.x, bot.y, bot.radius, 0, Math.PI * 2);
-ctx.fillStyle = bot.color;
-ctx.fill();
+        ctx.beginPath(); // Начать новый путь для отрисовки бота
+        ctx.arc(bot.x, bot.y, bot.radius, 0, Math.PI * 2);
+        ctx.fillStyle = bot.color;
+        ctx.fill();
 
-// Draw the small balls
-smallBalls.forEach((ball) => {
-ctx.drawImage(ballImage, ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
-});
+        smallBalls.forEach((ball) => {
+            ctx.drawImage(ballImage, ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
+        });
 
-// Check collision between player and small balls
-smallBalls.forEach((ball, index) => {
-const dx = ball.x - player.x;
-const dy = ball.y - player.y;
-const distance = Math.sqrt(dx * dx + dy * dy);
-if (distance < player.radius + ball.radius) {
-// "Eat" the small ball
-player.radius += 2;
-smallBalls.splice(index, 1);
-createSmallBall();
-score += 1;
-updateScore();
-}
-});
+        smallBalls.forEach((ball, index) => {
+            const dx = ball.x - player.x;
+            const dy = ball.y - player.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < player.radius + ball.radius) {
+                player.radius += 2;
+                smallBalls.splice(index, 1);
+                createSmallBall();
+                score += 1;
+                updateScore();
+            }
+        });
 
-// Check collision between bot and small balls
-smallBalls.forEach((ball, index) => {
-const dx = ball.x - bot.x;
-const dy = ball.y - bot.y;
-const distance = Math.sqrt(dx * dx + dy * dy);
-if (distance < bot.radius + ball.radius) {
-// "Eat" the small ball
-bot.radius += 2;
-smallBalls.splice(index, 1);
-createSmallBall();
-}
-});
+        smallBalls.forEach((ball, index) => {
+            const dx = ball.x - bot.x;
+            const dy = ball.y - bot.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < bot.radius + ball.radius) {
+                bot.radius += 2;
+                smallBalls.splice(index, 1);
+                createSmallBall();
+            }
+        });
 
-// Check collision between player and bot
-const dx = player.x - bot.x;
-const dy = player.y - bot.y;
-const distance = Math.sqrt(dx * dx + dy * dy);
-if (distance < player.radius + bot.radius) {
-// Player is eaten by the bot
-if (bot.radius > player.radius) {
-alert("Поражение!");
-resetGame();
-}
+        const dx = player.x - bot.x;
+        const dy = player.y - bot.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < player.radius + bot.radius) {
+            if (bot.radius > player.radius) {
+                alert("Поражение!");
+                resetGame();
+            }
+        }
+
+        if (Math.random() < 0.01) {
+            createSmallBall();
+        }
+    }
+
+    requestAnimationFrame(animate);
 }
 
-// Generate new small balls gradually
-if (Math.random() < 0.01) { // Adjust this probability as needed for desired frequency
-createSmallBall();
-}
-}
-
-requestAnimationFrame(animate);
-}
-
-// Start the animation loop
 animate();
 </script>
 </body>
