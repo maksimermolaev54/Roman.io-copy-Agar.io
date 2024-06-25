@@ -82,6 +82,55 @@
         font-size: 24px;
         cursor: pointer;
     }
+    #shopMenu {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow-x: hidden;
+    }
+    #shopMenuContent {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        width: 100%;
+        overflow-x: auto;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .skinCard {
+        width: 200px;
+        margin-right: 20px;
+        text-align: center;
+    }
+    .skinCard img {
+        width: 150px;
+        height: 150px;
+        margin-bottom: 10px;
+    }
+    .skinCard button {
+        margin-top: 10px;
+        padding: 5px 10px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    #selectedSkin {
+        width: 100%;
+        text-align: center;
+        margin-top: 20px;
+        display: none;
+    }
+    #selectedSkin img {
+        width: 200px;
+        height: 200px;
+    }
 </style>
 </head>
 <body>
@@ -90,6 +139,7 @@
     <h1>Roman.io</h1>
     <button id="playButton">Играть</button>
     <button id="clickerButton">Кликер</button>
+    <button id="shopButton">Магазин</button>
     <div id="mainMenuScore">Счётчик кликов из кликера: <span id="mainMenuClickerScore">0</span></div>
 </div>
 <div id="score">Score: <span id="scoreValue">0</span></div>
@@ -98,20 +148,89 @@
     <div id="clickerCounter">Клики: <span id="clickerScore">0</span></div>
     <img id="clickerImage" src="dadasereza.png" alt="Clicker Image">
 </div>
+<div id="shopMenu" style="display: none;">
+    <div id="backButtonShop">⬅</div>
+    <div id="shopMenuContent">
+        <div class="skinCard" id="skin1">
+            <img src="dadasereza2.png" alt="Skin 1">
+            <p>Злой дядя Серёжа</p>
+            <p>Цена: 50 кликов</p>
+            <button class="buyButton" data-skin-id="1">Купить</button>
+            <button class="selectButton" data-skin-id="1" style="display: none;">Выбрать</button>
+        </div>
+        <div class="skinCard" id="skin2">
+            <img src="dadasereza3.png" alt="Skin 2">
+            <p>Стрёмный дядя Серёжа</p>
+            <p>Цена: 100 кликов</p>
+            <button class="buyButton" data-skin-id="2">Купить</button>
+            <button class="selectButton" data-skin-id="2" style="display: none;">Выбрать</button>
+        </div>
+        <div class="skinCard" id="skin3">
+            <img src="dadasereza4.png" alt="Skin 3">
+            <p>Жмых дядя Серёжа</p>
+            <p>Цена: 500 кликов</p>
+            <button class="buyButton" data-skin-id="3">Купить</button>
+            <button class="selectButton" data-skin-id="3" style="display: none;">Выбрать</button>
+        </div>
+        <div class="skinCard" id="skin4">
+            <img src="dadasereza.png" alt="Skin 4">
+            <p>Основной</p>
+            <p>Цена: Бесплатно</p>
+            <button class="selectButton" data-skin-id="4">Выбрать</button>
+        </div>
+    </div>
+</div>
+<div id="selectedSkin">
+    <h2>Выбранный скин</h2>
+    <img id="selectedSkinImage" src="" alt="Selected Skin">
+</div>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const mainMenu = document.getElementById('mainMenu');
-const playButton = document.getElementById('playButton');
-const clickerButton = document.getElementById('clickerButton');
-const mainMenuClickerScoreElement = document.getElementById('mainMenuClickerScore');
-const scoreElement = document.getElementById('scoreValue');
-const clickerMenu = document.getElementById('clickerMenu');
-const clickerCounter = document.getElementById('clickerCounter');
-const clickerImage = document.getElementById('clickerImage');
-const clickerScoreElement = document.getElementById('clickerScore');
-const backButton = document.getElementById('backButton');
+document.addEventListener('DOMContentLoaded', function() {
+    // Весь ваш JavaScript-код, включая назначение обработчиков событий, должен быть здесь
+    const playButton = document.getElementById('playButton');
+    const clickerButton = document.getElementById('clickerButton');
+    const shopButton = document.getElementById('shopButton');
+    const mainMenu = document.getElementById('mainMenu');
+    const clickerMenu = document.getElementById('clickerMenu');
+    const shopMenu = document.getElementById('shopMenu');
+    const backButton = document.getElementById('backButton');
+    const backButtonShop = document.getElementById('backButtonShop');
+
+    playButton.addEventListener('click', () => {
+        inMainMenu = false;
+        mainMenu.style.display = 'none';
+        startGame();
+    });
+
+    clickerButton.addEventListener('click', () => {
+        inMainMenu = false;
+        mainMenu.style.display = 'none';
+        clickerMenu.style.display = 'block';
+    });
+
+    shopButton.addEventListener('click', () => {
+        inMainMenu = false;
+        mainMenu.style.display = 'none';
+        shopMenu.style.display = 'block';
+        updateShopButtons();
+    });
+
+    backButton.addEventListener('click', () => {
+        clickerMenu.style.display = 'none';
+        mainMenu.style.display = 'flex';
+        inMainMenu = true;
+    });
+
+    backButtonShop.addEventListener('click', () => {
+        shopMenu.style.display = 'none';
+        mainMenu.style.display = 'flex';
+        inMainMenu = true;
+    });
+
+    // Остальной ваш код, связанный с игрой, покупкой скинов и т.д.
+});
+
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -119,6 +238,8 @@ canvas.height = window.innerHeight;
 let inMainMenu = true;
 let score = 0;
 let clickerScore = getCookie('clickerScore') ? parseInt(getCookie('clickerScore')) : 0;
+let selectedSkinId = getCookie('selectedSkinId') ? parseInt(getCookie('selectedSkinId')) : 4; // 4 is default skin (dadasereza.png)
+let skinsOwned = getCookie('skinsOwned') ? JSON.parse(getCookie('skinsOwned')) : [4]; // Default: only the first skin is owned
 mainMenuClickerScoreElement.textContent = clickerScore;
 
 const player = {
@@ -129,7 +250,7 @@ const player = {
     image: new Image()
 };
 
-player.image.src = 'dadasereza.png';
+player.image.src = getSkinImage(selectedSkinId);
 
 const bot = {
     x: Math.random() * canvas.width,
@@ -138,218 +259,238 @@ const bot = {
     color: 'red'
 };
 
-const smallBalls = [];
-let animationFrameId;
-let smallBallTimer = 0;
+const small
+balls = [];
+let animationFrame;
 
-function createSmallBall() {
-    const angle = Math.random() * Math.PI * 2;
-    const distance = player.radius + 20;
-    const x = player.x + Math.cos(angle) * distance;
-    const y = player.y + Math.sin(angle) * distance;
+function update() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const ball = {
-        x,
-        y,
-        radius: 10,
-        image: new Image()
-    };
-    ball.image.src = 'nepivo.png';
-    smallBalls.push(ball);
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+    ctx.fillStyle = player.color;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(bot.x, bot.y, bot.radius, 0, Math.PI * 2);
+    ctx.fillStyle = bot.color;
+    ctx.fill();
+
+    smallBalls.forEach(ball => {
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = ball.color;
+        ctx.fill();
+    });
+
+    balls.forEach(ball => {
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = ball.color;
+        ctx.fill();
+
+        ball.x += ball.velocity.x;
+        ball.y += ball.velocity.y;
+
+        // Collision detection with player
+        if (distance(player.x, player.y, ball.x, ball.y) < player.radius + ball.radius) {
+            score++;
+            scoreElement.textContent = score;
+            balls = balls.filter(b => b !== ball);
+        }
+
+        // Collision detection with bot
+        if (distance(bot.x, bot.y, ball.x, ball.y) < bot.radius + ball.radius) {
+            balls = balls.filter(b => b !== ball);
+        }
+
+        // Remove balls that go out of bounds
+        if (ball.x + ball.radius < 0 || ball.x - ball.radius > canvas.width ||
+            ball.y + ball.radius < 0 || ball.y - ball.radius > canvas.height) {
+            balls = balls.filter(b => b !== ball);
+        }
+    });
+
+    animationFrame = requestAnimationFrame(update);
 }
 
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
+function distance(x1, y1, x2, y2) {
+    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+}
 
-canvas.addEventListener('mousemove', (e) => {
-    if (!inMainMenu) {
-        player.x = e.clientX;
-        player.y = e.clientY;
+function getSkinImage(skinId) {
+    switch (skinId) {
+        case 1:
+            return 'dadasereza2.png';
+        case 2:
+            return 'dadasereza3.png';
+        case 3:
+            return 'dadasereza4.png';
+        case 4:
+        default:
+            return 'dadasereza.png';
     }
-});
+}
+
+function buySkin(skinId, price) {
+    if (clickerScore >= price && !skinsOwned.includes(skinId)) {
+        clickerScore -= price;
+        clickerScoreElement.textContent = clickerScore;
+        skinsOwned.push(skinId);
+        saveGame();
+        updateShopButtons();
+    }
+}
+
+function selectSkin(skinId) {
+    selectedSkinId = skinId;
+    player.image.src = getSkinImage(skinId);
+    saveGame();
+    updateShopButtons();
+}
+
+function updateShopButtons() {
+    const buyButtons = document.querySelectorAll('.buyButton');
+    const selectButtons = document.querySelectorAll('.selectButton');
+
+    buyButtons.forEach(button => {
+        const skinId = parseInt(button.getAttribute('data-skin-id'));
+        const price = getSkinPrice(skinId);
+        if (clickerScore < price || skinsOwned.includes(skinId)) {
+            button.style.display = 'none';
+        } else {
+            button.style.display = 'block';
+        }
+    });
+
+    selectButtons.forEach(button => {
+        const skinId = parseInt(button.getAttribute('data-skin-id'));
+        if (skinsOwned.includes(skinId)) {
+            button.style.display = 'block';
+            if (skinId === selectedSkinId) {
+                button.textContent = 'Выбран';
+                button.disabled = true;
+            } else {
+                button.textContent = 'Выбрать';
+                button.disabled = false;
+            }
+        } else {
+            button.style.display = 'none';
+        }
+    });
+
+    if (selectedSkinId !== 4) {
+        document.getElementById('selectedSkin').style.display = 'block';
+        selectedSkinImage.src = player.image.src;
+    } else {
+        document.getElementById('selectedSkin').style.display = 'none';
+    }
+}
+
+function getSkinPrice(skinId) {
+    switch (skinId) {
+        case 1:
+            return 50;
+        case 2:
+            return 100;
+        case 3:
+            return 500;
+        case 4:
+        default:
+            return 0;
+    }
+}
+
+function saveGame() {
+    document.cookie = `clickerScore=${clickerScore};expires=Fri, 31 Dec 9999 23:59:59 GMT`;
+    document.cookie = `selectedSkinId=${selectedSkinId};expires=Fri, 31 Dec 9999 23:59:59 GMT`;
+    document.cookie = `skinsOwned=${JSON.stringify(skinsOwned)};expires=Fri, 31 Dec 9999 23:59:59 GMT`;
+}
+
+function getCookie(cookieName) {
+    const name = cookieName + "=";
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const cookieArray = decodedCookie.split(';');
+    for (let i = 0; i < cookieArray.length; i++) {
+        let cookie = cookieArray[i];
+        while (cookie.charAt(0) === ' ') {
+            cookie = cookie.substring(1);
+        }
+        if (cookie.indexOf(name) === 0) {
+            return cookie.substring(name.length, cookie.length);
+        }
+    }
+    return "";
+}
 
 playButton.addEventListener('click', () => {
+    inMainMenu = false;
+    mainMenu.style.display = 'none';
     startGame();
 });
 
 clickerButton.addEventListener('click', () => {
-    showClickerMenu();
+    inMainMenu = false;
+    mainMenu.style.display = 'none';
+    clickerMenu.style.display = 'block';
 });
 
-clickerImage.addEventListener('click', () => {
-    clickerScore++;
-    clickerScoreElement.textContent = clickerScore;
-    setCookie('clickerScore', clickerScore, 365);
+shopButton.addEventListener('click', () => {
+    inMainMenu = false;
+    mainMenu.style.display = 'none';
+    shopMenu.style.display = 'block';
+    updateShopButtons();
 });
 
 backButton.addEventListener('click', () => {
-    showMainMenu();
+    clickerMenu.style.display = 'none';
+    mainMenu.style.display = 'flex';
+    inMainMenu = true;
+});
+
+backButtonShop.addEventListener('click', () => {
+    shopMenu.style.display = 'none';
+    mainMenu.style.display = 'flex';
+    inMainMenu = true;
+});
+
+shopMenuContent.addEventListener('click', (event) => {
+    if (event.target.classList.contains('buyButton')) {
+        const skinId = parseInt(event.target.getAttribute('data-skin-id'));
+        const price = getSkinPrice(skinId);
+        buySkin(skinId, price);
+    } else if (event.target.classList.contains('selectButton')) {
+        const skinId = parseInt(event.target.getAttribute('data-skin-id'));
+        selectSkin(skinId);
+    }
+});
+
+canvas.addEventListener('click', (event) => {
+    if (!inMainMenu) {
+        const newBall = {
+            x: event.clientX,
+            y: event.clientY,
+            radius: 10,
+            color: 'green',
+            velocity: {
+                x: (Math.random() - 0.5) * 8,
+                y: (Math.random() - 0.5) * 8
+            }
+        };
+        balls.push(newBall);
+    }
 });
 
 function startGame() {
-    mainMenu.style.display = 'none';
-    inMainMenu = false;
-    score = 0;
-    resetGame();
-    animate();
+    update();
 }
 
-function showClickerMenu() {
-    mainMenu.style.display = 'none';
-    clickerMenu.style.display = 'flex';
-}
-
-function showMainMenu() {
-    mainMenu.style.display = 'flex';
-    clickerMenu.style.display = 'none';
-    mainMenuClickerScoreElement.textContent = clickerScore;
-    inMainMenu = true;
-}
-
-window.addEventListener('keydown', (e) => {
-    if (e.key === 'w' && player.radius > 10) {
-        player.radius -= 5;
-        createSmallBall();
-    }
-});
-
-function moveBot() {
-    const dx = player.x - bot.x;
-    const dy = player.y - bot.y;
-    const angle = Math.atan2(dy, dx);
-    const speed = 1;
-    bot.x += Math.cos(angle) * speed;
-    bot.y += Math.sin(angle) * speed;
-}
-
-function resetGame() {
-    player.radius = 30;
-    player.x = canvas.width / 2;
-    player.y = canvas.height / 2;
-    bot.radius = 30;
-    bot.x = Math.random() * canvas.width;
-    bot.y = Math.random() * canvas.height;
-    smallBalls.length = 0;
-    updateScore();
-}
-
-function updateScore() {
-    scoreElement.textContent = score;
-    if (score >= 500) {
-        alert('Победа!');
-        endGame();
-    }
-}
-
-function endGame() {
-    resetGame();
-    cancelAnimationFrame(animationFrameId);
-    showMainMenu();
-}
-
-function animate() {
-    if (!inMainMenu) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Draw grid background
-        ctx.beginPath();
-        ctx.strokeStyle = 'lightgray';
-        for (let x = 0; x < canvas.width; x += 50) {
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvas.height);
-        }
-        for (let y = 0; y < canvas.height; y += 50) {
-            ctx.moveTo(0, y);
-            ctx.lineTo(canvas.width, y);
-        }
-        ctx.stroke();
-
-        moveBot();
-
-        // Draw player
-        ctx.drawImage(player.image, player.x - player.radius, player.y - player.radius, player.radius * 2, player.radius * 2);
-
-        // Draw bot
-        ctx.beginPath();
-        ctx.arc(bot.x, bot.y, bot.radius, 0, Math.PI * 2);
-        ctx.fillStyle = bot.color;
-        ctx.fill();
-
-        // Draw small balls
-        smallBalls.forEach((ball) => {
-            ctx.drawImage(ball.image, ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
-        });
-
-        // Check collision between player and small balls
-        smallBalls.forEach((ball, index) => {
-            const dx = ball.x - player.x;
-            const dy = ball.y - player.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < player.radius + ball.radius) {
-                player.radius += 2;
-                smallBalls.splice(index, 1);
-                score += 1;
-                updateScore();
-            }
-        });
-
-        // Check collision between bot and small balls
-        smallBalls.forEach((ball, index) => {
-            const dx = ball.x - bot.x;
-            const dy = ball.y - bot.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < bot.radius + ball.radius) {
-                bot.radius += 2;
-                smallBalls.splice(index, 1);
-            }
-        });
-
-        // Check collision between player and bot
-        const dx = player.x - bot.x;
-        const dy = player.y - bot.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < player.radius + bot.radius) {
-            if (bot.radius > player.radius) {
-                alert('Поражение!');
-                endGame();
-            }
-        }
-
-        // Create new small balls gradually
-        smallBallTimer++;
-        if (smallBallTimer > 100) { // Create a small ball every 100 frames
-            createSmallBall();
-            smallBallTimer = 0;
-        }
-
-        animationFrameId = requestAnimationFrame(animate);
-    }
-}
-
-function setCookie(name, value, days) {
-    const d = new Date();
-    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-    const expires = "expires=" + d.toUTCString();
-    document.cookie = name + "=" + value + ";" + expires + ";path=/";
-}
-
-function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for(let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-
-animate(); // Start animation loop
+// Load initial game state
+updateShopButtons();
 </script>
 </body>
 </html>
+
 
 
 
