@@ -1,88 +1,145 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roman.io</title>
 <style>
-body, html {
-margin: 0;
-padding: 0;
-width: 100%;
-height: 100%;
-overflow: hidden;
-}
-canvas {
-display: block;
-width: 100%;
-height: 100%;
-}
-#mainMenu {
-position: absolute;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background-color: white;
-display: flex;
-flex-direction: column;
-justify-content: center;
-align-items: center;
-}
-#playButton {
-padding: 10px 20px;
-font-size: 24px;
-border: none;
-background-color: #4CAF50;
-color: white;
-cursor: pointer;
-}
-#score {
-position: absolute;
-bottom: 10px;
-right: 10px;
-font-size: 18px;
-}
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+    }
+    canvas {
+        display: block;
+    }
+    #mainMenu {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    #mainMenu h1 {
+        font-size: 48px;
+        color: #333;
+        margin-bottom: 20px;
+    }
+    #mainMenu button {
+        padding: 10px 20px;
+        font-size: 24px;
+        border: none;
+        background-color: #4CAF50;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-bottom: 10px;
+    }
+    #mainMenu button:hover {
+        background-color: #45a049;
+    }
+    #score {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        font-size: 18px;
+        color: #333;
+    }
+    #clickerMenu {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    #clickerMenu img {
+        width: 100px;
+        height: 100px;
+        cursor: pointer;
+    }
+    #clickerMenu #clickerCounter {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    #backButton {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-size: 24px;
+        cursor: pointer;
+    }
 </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
 <div id="mainMenu">
-<h1>Roman.io</h1>
-<input type="file" id="imageInput">
-<button id="playButton">Играть</button>
+    <h1>Roman.io</h1>
+    <button id="playButton">Играть</button>
+    <button id="clickerButton">Кликер</button>
+    <div id="mainMenuScore">Счётчик кликов из кликера: <span id="mainMenuClickerScore">0</span></div>
 </div>
 <div id="score">Score: <span id="scoreValue">0</span></div>
-<script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-const mainMenu = document.getElementById("mainMenu");
-const playButton = document.getElementById("playButton");
-const scoreElement = document.getElementById("scoreValue");
-const imageInput = document.getElementById("imageInput");
+<div id="clickerMenu" style="display: none;">
+    <div id="backButton">⬅</div>
+    <div id="clickerCounter">Клики: <span id="clickerScore">0</span></div>
+    <img id="clickerImage" src="dadasereza.png" alt="Clicker Image">
+</div>
 
-let inMainMenu = true;
-let score = 0;
-let playerImage;
-const ballImage = new Image();
-ballImage.src = "nepivo.png"; // Путь к изображению для маленьких шариков
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const mainMenu = document.getElementById('mainMenu');
+const playButton = document.getElementById('playButton');
+const clickerButton = document.getElementById('clickerButton');
+const mainMenuClickerScoreElement = document.getElementById('mainMenuClickerScore');
+const scoreElement = document.getElementById('scoreValue');
+const clickerMenu = document.getElementById('clickerMenu');
+const clickerCounter = document.getElementById('clickerCounter');
+const clickerImage = document.getElementById('clickerImage');
+const clickerScoreElement = document.getElementById('clickerScore');
+const backButton = document.getElementById('backButton');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+let inMainMenu = true;
+let score = 0;
+let clickerScore = 0;
+
 const player = {
-x: canvas.width / 2,
-y: canvas.height / 2,
-radius: 30,
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    radius: 30,
+    color: 'blue',
+    image: new Image()
 };
 
+player.image.src = 'dadasereza.png';
+
 const bot = {
-x: Math.random() * canvas.width,
-y: Math.random() * canvas.height,
-radius: 30,
-color: "red",
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    radius: 30,
+    color: 'red'
 };
 
 const smallBalls = [];
+let animationFrameId;
+let smallBallTimer = 0;
 
 function createSmallBall() {
     const angle = Math.random() * Math.PI * 2;
@@ -94,56 +151,65 @@ function createSmallBall() {
         x,
         y,
         radius: 10,
+        image: new Image()
     };
+    ball.image.src = 'nepivo.png';
     smallBalls.push(ball);
 }
 
-window.addEventListener("resize", () => {
+window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 });
 
-canvas.addEventListener("mousemove", (e) => {
+canvas.addEventListener('mousemove', (e) => {
     if (!inMainMenu) {
         player.x = e.clientX;
         player.y = e.clientY;
     }
 });
 
-playButton.addEventListener("click", () => {
-    console.log("Игра начинается!");
-    mainMenu.style.display = "none";
-    inMainMenu = false;
-    
-    // Проверяем, загружено ли изображение синего шара
-    if (!playerImage) {
-        // Если изображение не загружено, используем стандартный синий круг
-        playerImage = new Image();
-        playerImage.onload = () => {
-            console.log("Изображение синего шара загружено!");
-        };
-        playerImage.src = "dadasereza.png"; // Путь к изображению для синего шара
-    }
+playButton.addEventListener('click', () => {
+    startGame();
 });
 
-window.addEventListener("keydown", (e) => {
-    if (e.key === "w" && player.radius > 10) {
+clickerButton.addEventListener('click', () => {
+    showClickerMenu();
+});
+
+clickerImage.addEventListener('click', () => {
+    clickerScore++;
+    clickerScoreElement.textContent = clickerScore;
+});
+
+backButton.addEventListener('click', () => {
+    showMainMenu();
+});
+
+function startGame() {
+    mainMenu.style.display = 'none';
+    inMainMenu = false;
+    score = 0;
+    resetGame();
+    animate();
+}
+
+function showClickerMenu() {
+    mainMenu.style.display = 'none';
+    clickerMenu.style.display = 'flex';
+}
+
+function showMainMenu() {
+    mainMenu.style.display = 'flex';
+    clickerMenu.style.display = 'none';
+    mainMenuClickerScoreElement.textContent = clickerScore;
+    inMainMenu = true;
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'w' && player.radius > 10) {
         player.radius -= 5;
         createSmallBall();
-    }
-});
-
-imageInput.addEventListener("change", (e) => {
-    if (!inMainMenu) {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-
-        reader.onload = () => {
-            playerImage = new Image();
-            playerImage.src = reader.result;
-        };
-
-        reader.readAsDataURL(file);
     }
 });
 
@@ -164,26 +230,30 @@ function resetGame() {
     bot.x = Math.random() * canvas.width;
     bot.y = Math.random() * canvas.height;
     smallBalls.length = 0;
-    inMainMenu = true;
-    mainMenu.style.display = "flex";
-    score = 0;
     updateScore();
 }
 
 function updateScore() {
     scoreElement.textContent = score;
     if (score >= 500) {
-        alert("Победа!");
-        resetGame();
+        alert('Победа!');
+        endGame();
     }
+}
+
+function endGame() {
+    resetGame();
+    cancelAnimationFrame(animationFrameId);
+    showMainMenu();
 }
 
 function animate() {
     if (!inMainMenu) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Draw grid background
         ctx.beginPath();
-        ctx.strokeStyle = "lightgray";
+        ctx.strokeStyle = 'lightgray';
         for (let x = 0; x < canvas.width; x += 50) {
             ctx.moveTo(x, 0);
             ctx.lineTo(x, canvas.height);
@@ -196,24 +266,21 @@ function animate() {
 
         moveBot();
 
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-        if (playerImage) {
-            ctx.drawImage(playerImage, player.x - player.radius, player.y - player.radius, player.radius * 2, player.radius * 2);
-        } else {
-            ctx.fillStyle = "blue";
-            ctx.fill();
-        }
+        // Draw player
+        ctx.drawImage(player.image, player.x - player.radius, player.y - player.radius, player.radius * 2, player.radius * 2);
 
-        ctx.beginPath(); // Начать новый путь для отрисовки бота
+        // Draw bot
+        ctx.beginPath();
         ctx.arc(bot.x, bot.y, bot.radius, 0, Math.PI * 2);
         ctx.fillStyle = bot.color;
         ctx.fill();
 
+        // Draw small balls
         smallBalls.forEach((ball) => {
-            ctx.drawImage(ballImage, ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
+            ctx.drawImage(ball.image, ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
         });
 
+        // Check collision between player and small balls
         smallBalls.forEach((ball, index) => {
             const dx = ball.x - player.x;
             const dy = ball.y - player.y;
@@ -221,12 +288,12 @@ function animate() {
             if (distance < player.radius + ball.radius) {
                 player.radius += 2;
                 smallBalls.splice(index, 1);
-                createSmallBall();
                 score += 1;
                 updateScore();
             }
         });
 
+        // Check collision between bot and small balls
         smallBalls.forEach((ball, index) => {
             const dx = ball.x - bot.x;
             const dy = ball.y - bot.y;
@@ -234,29 +301,35 @@ function animate() {
             if (distance < bot.radius + ball.radius) {
                 bot.radius += 2;
                 smallBalls.splice(index, 1);
-                createSmallBall();
             }
         });
 
+        // Check collision between player and bot
         const dx = player.x - bot.x;
         const dy = player.y - bot.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance < player.radius + bot.radius) {
             if (bot.radius > player.radius) {
-                alert("Поражение!");
-                resetGame();
+                alert('Поражение!');
+                endGame();
             }
         }
 
-        if (Math.random() < 0.01) {
+        // Create new small balls gradually
+        smallBallTimer++;
+        if (smallBallTimer > 100) { // Create a small ball every 100 frames
             createSmallBall();
+            smallBallTimer = 0;
         }
-    }
 
-    requestAnimationFrame(animate);
+        animationFrameId = requestAnimationFrame(animate);
+    }
 }
 
-animate();
+animate(); // Start animation loop
 </script>
 </body>
 </html>
+
+
+
